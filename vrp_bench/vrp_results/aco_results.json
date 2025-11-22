@@ -1,0 +1,148 @@
+{
+  "solver": "ACO",
+  "overall": {
+    "total_cost": 300.83541715426014,
+    "waiting_time": 0.0,
+    "cvr": 0.0,
+    "feasibility": 1.0,
+    "runtime": 0.4982297420501709,
+    "robustness": 0.0016306703106448816
+  },
+  "cvrp": {
+    "total_cost": 300.83541715426014,
+    "waiting_time": 0.0,
+    "cvr": 0.0,
+    "feasibility": 1.0,
+    "runtime": 0.4982297420501709,
+    "robustness": 0.0016306703106448816
+  },
+  "twcvrp": {
+    "total_cost": 0,
+    "waiting_time": 0,
+    "cvr": 0,
+    "feasibility": 0,
+    "runtime": 0,
+    "robustness": 0,
+    "time_window_violations": 0
+  },
+  "by_size": {
+    "small": {
+      "feasibility": 1.0,
+      "cost": 21.47902470861835,
+      "cvr": 0.0,
+      "runtime": 0.01865212122599284
+    },
+    "medium": {
+      "feasibility": 1.0,
+      "cost": 147.6316015915322,
+      "cvr": 0.0,
+      "runtime": 0.14887070655822754
+    },
+    "large": {
+      "feasibility": 1.0,
+      "cost": 873.0738213854507,
+      "cvr": 0.0,
+      "runtime": 1.5669552087783813
+    }
+  },
+  "detailed": [
+    {
+      "problem": "cvrp",
+      "size": 10,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 6.40850646289654,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.004807869593302409,
+        "robustness": 0.0010210488488135766
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 20,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 12.684798284813018,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.01327045758565267,
+        "robustness": 0.0012031394231460206
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 50,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 45.34376937814548,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.03787803649902344,
+        "robustness": 0.003077093160416506
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 100,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 101.59939871577193,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.07792830467224121,
+        "robustness": 0.0032053310604424714
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 200,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 193.66380446729244,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.21981310844421387,
+        "robustness": 0.0029080796816955967
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 500,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 431.2731794517853,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.828988790512085,
+        "robustness": 0.0
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 1000,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 1314.874463319116,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 2.3049216270446777,
+        "robustness": 0.0
+      },
+      "problem_type": "cvrp"
+    }
+  ]
+}

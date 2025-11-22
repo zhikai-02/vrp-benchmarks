@@ -1,0 +1,148 @@
+{
+  "solver": "Tabu Search",
+  "overall": {
+    "total_cost": 251.3075577978994,
+    "waiting_time": 0.0,
+    "cvr": 2.333333333333333,
+    "feasibility": 0.6666666666666666,
+    "runtime": 11.003722826639812,
+    "robustness": 0.0030450827987403015
+  },
+  "cvrp": {
+    "total_cost": 251.3075577978994,
+    "waiting_time": 0.0,
+    "cvr": 2.333333333333333,
+    "feasibility": 0.6666666666666666,
+    "runtime": 11.003722826639812,
+    "robustness": 0.0030450827987403015
+  },
+  "twcvrp": {
+    "total_cost": 0,
+    "waiting_time": 0,
+    "cvr": 0,
+    "feasibility": 0,
+    "runtime": 0,
+    "robustness": 0,
+    "time_window_violations": 0
+  },
+  "by_size": {
+    "small": {
+      "feasibility": 0.2222222222222222,
+      "cost": 24.14341661606355,
+      "cvr": 5.444444444444444,
+      "runtime": 0.2596913708580865
+    },
+    "medium": {
+      "feasibility": 1.0,
+      "cost": 177.48760818100106,
+      "cvr": 0.0,
+      "runtime": 1.7124440670013428
+    },
+    "large": {
+      "feasibility": 1.0,
+      "cost": 665.8737191875516,
+      "cvr": 0.0,
+      "runtime": 36.41104876995087
+    }
+  },
+  "detailed": [
+    {
+      "problem": "cvrp",
+      "size": 10,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 6.436205186921261,
+        "waiting_time": 0.0,
+        "cvr": 10.0,
+        "feasibility": 0.3333333333333333,
+        "runtime": 0.10109909375508626,
+        "robustness": 0.0017187020478907546
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 20,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 14.951601690635846,
+        "waiting_time": 0.0,
+        "cvr": 5.0,
+        "feasibility": 0.0,
+        "runtime": 0.2172838052113851,
+        "robustness": 0.0021819953155149904
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 50,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 51.04244297063355,
+        "waiting_time": 0.0,
+        "cvr": 1.3333333333333333,
+        "feasibility": 0.3333333333333333,
+        "runtime": 0.4606912136077881,
+        "robustness": 0.00210026710939048
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 100,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 109.8974268964705,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 0.758526086807251,
+        "robustness": 0.004815288021953024
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 200,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 245.07778946553162,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 2.6663620471954346,
+        "robustness": 0.010499327096432864
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 500,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 535.4054047156703,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 14.623697996139526,
+        "robustness": 0.0
+      },
+      "problem_type": "cvrp"
+    },
+    {
+      "problem": "cvrp",
+      "size": 1000,
+      "type": "standard",
+      "metrics": {
+        "total_cost": 796.3420336594328,
+        "waiting_time": 0.0,
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 58.19839954376221,
+        "robustness": 0.0
+      },
+      "problem_type": "cvrp"
+    }
+  ]
+}

@@ -10,14 +10,18 @@ class VRPEvaluator:
     
     def __init__(self, base_path: str = "../../vrp_benchmark/"):
         self.base_path = base_path
-        self.problems = ['real_cvrp/cvrp_', 'real_twcvrp/twvrp_']
-        self.types = [['_single_depot_single_vehicule_sumDemands', '_multi_depot'], 
-                     ['_depots_equal_city', '_single_depot']]
+        # 修改这里：适应新的数据结构
+        # 我们只生成了 CVRP 数据，且文件名格式简单
+        self.problems = ['cvrp/vrp_'] 
+        # 类型变体对于生成的标准数据来说是空的，或者我们可以只保留一个空字符串
+        self.types = [['']] 
         self.size_categories = {
             'small': [10, 20, 50],
             'medium': [100, 200],
             'large': [500, 1000]
         }
+        # 数据集大小后缀，生成脚本中是 1000
+        self.dataset_size_suffix = "_1000" 
     
     def evaluate_solver(self, solver_class, solver_name: str, sizes: List[int] = [10, 20, 50, 100],
                        max_instances_per_file: int = 5, num_realizations: int = 10) -> Dict:
@@ -47,52 +51,62 @@ class VRPEvaluator:
                 
                 print(f"Processing size {size}: {actual_instances} instances, {actual_realizations} realizations")
                 
-                for type_variant in self.types[i]:
-                    data_path = self.base_path + self.problems[i] + str(size) + type_variant + '.npz'
+                # 修改这里：不再遍历复杂的 type_variant，直接构建路径
+                # 目标路径: base_path + cvrp/vrp_ + size + _1000 + .npz
+                # 例如: ./data/cvrp/vrp_10_1000.npz
+                
+                data_path = os.path.join(self.base_path, f"cvrp/vrp_{size}{self.dataset_size_suffix}.npz")
+                
+                # 兼容性检查：如果上面的路径不存在，尝试不带 dataset_size 后缀
+                if not os.path.exists(data_path):
+                     data_path = os.path.join(self.base_path, f"cvrp/vrp_{size}.npz")
+
+                if not os.path.exists(data_path):
+                    print(f"Warning: Data file not found: {data_path}")
+                    continue
+                
+                try:
+                    # Load data
+                    data = np.load(data_path, allow_pickle=True)
+                    data_dict = self._convert_to_dict(data)
                     
-                    if not os.path.exists(data_path):
+                    # Limit instances for efficiency
+                    limited_data = self._limit_instances(data_dict, actual_instances)
+                    
+                    # Skip empty datasets
+                    if self._is_empty_dataset(limited_data):
                         continue
                     
-                    try:
-                        # Load data
-                        data = np.load(data_path, allow_pickle=True)
-                        data_dict = self._convert_to_dict(data)
-                        
-                        # Limit instances for efficiency
-                        limited_data = self._limit_instances(data_dict, actual_instances)
-                        
-                        # Skip empty datasets
-                        if self._is_empty_dataset(limited_data):
-                            continue
-                        
-                        # Create solver instance
-                        solver = solver_class(limited_data)
-                        
-                        # Solve all instances
-                        avg_results, instance_results = solver.solve_all_instances(actual_realizations)
-                        
-                        # Store results
-                        result_entry = {
-                            'problem': self.problems[i],
-                            'size': size,
-                            'type': type_variant,
-                            'metrics': avg_results,
-                            'problem_type': 'twcvrp' if 'twcvrp' in self.problems[i] else 'cvrp'
-                        }
-                        all_results.append(result_entry)
-                        
-                        # Categorize by size
-                        for category, size_list in self.size_categories.items():
-                            if size in size_list:
-                                results_by_size[category].append(avg_results)
-                        
-                        instance_count += 1
-                        print(f"Completed {solver_name} - size {size}: Cost={avg_results['total_cost']:.1f}, "
-                              f"Runtime={avg_results['runtime']*1000:.1f}ms")
+                    # Create solver instance
+                    solver = solver_class(limited_data)
                     
-                    except Exception as e:
-                        print(f"Error processing {data_path}: {e}")
-                        continue
+                    # Solve all instances
+                    avg_results, instance_results = solver.solve_all_instances(actual_realizations)
+                    
+                    # Store results
+                    result_entry = {
+                        'problem': 'cvrp',
+                        'size': size,
+                        'type': 'standard',
+                        'metrics': avg_results,
+                        'problem_type': 'cvrp'
+                    }
+                    all_results.append(result_entry)
+                    
+                    # Categorize by size
+                    for category, size_list in self.size_categories.items():
+                        if size in size_list:
+                            results_by_size[category].append(avg_results)
+                    
+                    instance_count += 1
+                    print(f"Completed {solver_name} - size {size}: Cost={avg_results['total_cost']:.1f}, "
+                            f"Runtime={avg_results['runtime']*1000:.1f}ms")
+                
+                except Exception as e:
+                    print(f"Error processing {data_path}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
         
         print(f"Completed evaluation: {instance_count} problem-type combinations processed")
         
@@ -124,7 +138,16 @@ class VRPEvaluator:
     
     def _is_empty_dataset(self, data_dict: Dict) -> bool:
         """Check if dataset is empty or has no instances"""
+        # 检查 locs (rl4co 生成的数据通常用 locs 或 depot_loc/node_loc)
+        if 'locs' in data_dict:
+             if isinstance(data_dict['locs'], np.ndarray):
+                return data_dict['locs'].shape[0] == 0
+        
+        # 兼容旧代码的 locations
         if 'locations' not in data_dict:
+            # 尝试适配 rl4co 数据格式
+            if 'locs' in data_dict:
+                return False # 假设有 locs 就不为空
             return True
         
         if isinstance(data_dict['locations'], np.ndarray):
@@ -143,14 +166,18 @@ class VRPEvaluator:
     
     def _limit_instances(self, data_dict: Dict, max_instances: int) -> Dict:
         """Limit number of instances for efficiency"""
-        if 'locations' not in data_dict:
+        # 适配 rl4co 数据格式 (通常包含 locs, demand, depot 等)
+        keys_to_check = ['locations', 'locs', 'demand', 'depot']
+        primary_key = next((k for k in keys_to_check if k in data_dict), None)
+        
+        if not primary_key:
             return data_dict
         
         # Determine number of instances
-        if isinstance(data_dict['locations'], np.ndarray):
-            num_instances = min(max_instances, data_dict['locations'].shape[0])
-        elif isinstance(data_dict['locations'], list):
-            num_instances = min(max_instances, len(data_dict['locations']))
+        if isinstance(data_dict[primary_key], np.ndarray):
+            num_instances = min(max_instances, data_dict[primary_key].shape[0])
+        elif isinstance(data_dict[primary_key], list):
+            num_instances = min(max_instances, len(data_dict[primary_key]))
         else:
             return data_dict
         
@@ -220,7 +247,9 @@ class VRPEvaluator:
     
     def _save_results(self, results: Dict, solver_name: str):
         """Save results to JSON file"""
-        filename = f"{solver_name.lower().replace(' ', '_')}_results.json"
+        # Ensure directory exists
+        os.makedirs("vrp_results", exist_ok=True)
+        filename = f"vrp_results/{solver_name.lower().replace(' ', '_')}_results.json"
         with open(filename, 'w') as f:
             json.dump(results, f, indent=2)
     

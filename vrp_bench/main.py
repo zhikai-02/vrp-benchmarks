@@ -34,7 +34,7 @@ def main():
     
     # Test configuration (optimized for OR-Tools)
     config = {
-        'base_path': "../../vrp_benchmark/",
+        'base_path': "./data/",  # Modified to point to local data directory
         'test_sizes': [10, 20, 50, 100, 200, 500, 1000],  # Reduced set for OR-Tools
         'max_instances_per_file': 3,
         'num_realizations': 3
@@ -46,12 +46,13 @@ def main():
     # Dictionary to store all results
     results = {}
     
+    print("DEBUG: Running modified main.py with only ACO")
     # Define all solvers
     solvers = [
-        (NN2optSolver, "NN+2opt"),
-        (TabuSearchSolver, "Tabu Search"),
+        # (NN2optSolver, "NN+2opt"),
+        # (TabuSearchSolver, "Tabu Search"),
         (ACOSolver, "ACO"),
-        (ORToolsSolver, solver_name)
+        # (ORToolsSolver, solver_name)
     ]
     
     # Test each solver

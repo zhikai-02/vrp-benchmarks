@@ -1,14 +1,13 @@
+import numpy as np
 import time
 import random
-import numpy as np
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Tuple
 from vrp_base import VRPSolverBase
 from travel_time_generator import sample_travel_time
 from nn_2opt_solver import NN2optSolver
 
-
 class ACOSolver(VRPSolverBase):
-    """Simple and fast Ant Colony Optimization solver for VRP"""
+    """Ant Colony Optimization solver for VRP"""
     
     def __init__(self, data: Dict):
         """Initialize with problem data"""
@@ -131,7 +130,11 @@ class ACOSolver(VRPSolverBase):
             
             # Get vehicle data
             vehicle_capacity = capacities[vehicle] if vehicle < len(capacities) else (capacities[0] if len(capacities) > 0 else 100)
-            start_depot = depots[vehicle] if vehicle < len(depots) else depots[0]
+            
+            if len(depots) > 0:
+                start_depot = depots[vehicle] if vehicle < len(depots) else depots[0]
+            else:
+                start_depot = 0  # Default to node 0 if no depots found
             
             route = [start_depot]
             current = start_depot
@@ -155,9 +158,9 @@ class ACOSolver(VRPSolverBase):
                     travel_time = sample_travel_time(current, customer, distance_dict, current_time)
                     arrival_time = current_time + travel_time
                     
-                    # Appear time check
-                    if customer in appear_times and arrival_time < appear_times[customer]:
-                        continue
+                    # Appear time check - REMOVED strict check to allow waiting
+                    # if customer in appear_times and arrival_time < appear_times[customer]:
+                    #    continue
                     
                     # Time window check
                     if customer in time_windows:

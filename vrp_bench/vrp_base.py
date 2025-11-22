@@ -12,37 +12,112 @@ class VRPSolverBase(ABC):
     
     def __init__(self, data: Dict):
         """Initialize with problem data and pre-compute optimizations"""
+        print(f"DEBUG: data keys: {data.keys()}")
+        if 'depot' in data:
+             print(f"DEBUG: depot shape: {np.array(data['depot']).shape}")
+        if 'locations' in data:
+             print(f"DEBUG: locations shape: {np.array(data['locations']).shape}")
+        if 'locs' in data:
+             print(f"DEBUG: locs shape: {np.array(data['locs']).shape}")
+        
+        # Handle depot first
+        if 'depot' in data:
+            self.depot = self._convert_inhomogeneous_array(data['depot'])
+        elif 'depot_loc' in data:
+            self.depot = self._convert_inhomogeneous_array(data['depot_loc'])
+        else:
+            self.depot = None
+
         # Handle data conversion
-        self.locations = self._convert_inhomogeneous_array(data['locations'])
-        self.demands = self._convert_inhomogeneous_array(data['demands'])
-        self.num_vehicles = self._convert_inhomogeneous_array(data['num_vehicles'])
-        self.vehicle_capacities = self._convert_inhomogeneous_array(data['vehicle_capacities'])
-        
-        # Handle appear times - these are CRITICAL for feasibility!
-        self.appear_times = data.get('appear_times', None)
-        if self.appear_times is not None:
-            self.appear_times = self._convert_inhomogeneous_array(self.appear_times)
-        
-        # Handle time windows and time matrices for TWCVRP
-        self.time_windows = data.get('time_windows', None)
-        self.time_matrix = data.get('time_matrix', None)
-        
-        if self.time_windows is not None:
-            self.time_windows = self._convert_inhomogeneous_array(self.time_windows)
+        if 'locations' in data:
+            self.locations = self._convert_inhomogeneous_array(data['locations'])
+        elif 'locs' in data:
+            self.locations = self._convert_inhomogeneous_array(data['locs'])
+        else:
+            raise KeyError("Data must contain 'locations' or 'locs'")
             
-        if self.time_matrix is not None:
-            self.time_matrix = self._convert_inhomogeneous_array(self.time_matrix)
-        
-        # Validate and get dimensions
+        # Handle demand
+        if 'demand' in data:
+            self.demands = self._convert_inhomogeneous_array(data['demand'])
+        else:
+            # Fallback or default demands if missing
+            self.demands = np.zeros(len(self.locations))
+
+        # Merge depot into locations and demands if they are separate
+        # This fixes the issue where depot is provided separately and locations only contains customers
+        if self.depot is not None and isinstance(self.locations, np.ndarray) and isinstance(self.depot, np.ndarray):
+            # Check if dimensions match for merging (Batch case)
+            if self.locations.ndim == 3 and self.depot.ndim == 2:
+                # locations: (B, N, 2), depot: (B, 2)
+                # Check if demands also need merging
+                if isinstance(self.demands, np.ndarray) and self.demands.ndim == 2:
+                    if self.demands.shape[1] == self.locations.shape[1]:
+                        # Prepend depot to locations
+                        depot_expanded = self.depot[:, np.newaxis, :]
+                        self.locations = np.concatenate([depot_expanded, self.locations], axis=1)
+                        
+                        # Prepend 0 to demands
+                        zeros = np.zeros((self.demands.shape[0], 1), dtype=self.demands.dtype)
+                        self.demands = np.concatenate([zeros, self.demands], axis=1)
+
+        # If depot was not in data, infer it from locations (now that we might have merged it)
+        if self.depot is None:
+            if isinstance(self.locations, list):
+                self.depot = [np.zeros(2) for _ in self.locations]
+            else:
+                # Assume first location is depot
+                if self.locations.ndim == 3:
+                     self.depot = self.locations[:, 0, :]
+                else:
+                     self.depot = np.zeros((len(self.locations), 2))
+
+        # Handle capacity
+        if 'capacity' in data:
+             self.capacity = data['capacity']
+        else:
+             # Default capacity if not provided (e.g. 1.0 for normalized demands)
+             self.capacity = 1.0
+             
+        # Handle time windows (optional)
+        if 'time_window' in data:
+            self.time_windows = self._convert_inhomogeneous_array(data['time_window'])
+        else:
+            self.time_windows = None
+            
+        # Handle appear times (optional)
+        if 'appear_time' in data:
+            self.appear_times = self._convert_inhomogeneous_array(data['appear_time'])
+        else:
+            self.appear_times = None
+            
+        # Handle time matrix (optional)
+        if 'time_matrix' in data:
+            self.time_matrix = self._convert_inhomogeneous_array(data['time_matrix'])
+        else:
+            self.time_matrix = None
+
+        # Handle number of vehicles (optional, default to sufficient number)
+        if 'num_vehicles' in data:
+            self.num_vehicles = data['num_vehicles']
+        else:
+            # Default to a large enough number if not specified
+            self.num_vehicles = 50 
+            
+        # Handle vehicle capacities (optional)
+        if 'vehicle_capacity' in data:
+            self.vehicle_capacities = self._convert_inhomogeneous_array(data['vehicle_capacity'])
+        else:
+            # Use global capacity if specific vehicle capacities not provided
+            self.vehicle_capacities = self.capacity
+            
         self.num_instances = self._get_num_instances()
-        self.num_nodes = self._get_num_nodes()
         
-        # Pre-calculate distance matrices and other optimizations
+        # Pre-compute optimizations
         self._precompute_distances()
         self._precompute_depot_customer_indices()
         self._precompute_time_windows()
         self._precompute_appear_times()
-    
+        
     def _convert_inhomogeneous_array(self, data: Union[np.ndarray, list, tuple, int, float]) -> Union[List, np.ndarray]:
         """Convert inhomogeneous arrays to a format we can work with"""
         try:
@@ -434,6 +509,13 @@ class VRPSolverBase(ABC):
             
             # Process route
             for i, node in enumerate(route):
+                # Update current time first
+                if i > 0:
+                    prev_node = route[i-1]
+                    # Use sample_travel_time for stochastic routing
+                    travel_time = sample_travel_time(prev_node, node, self.distance_dicts[instance_idx], current_time)
+                    current_time += travel_time
+
                 # Check customer visits
                 if node in customers:
                     customers_served += 1
@@ -443,17 +525,10 @@ class VRPSolverBase(ABC):
                     if node < len(demands):
                         route_demand += demands[node]
                     
-                    # Check if customer has appeared
+                    # Check if customer has appeared (Wait if needed)
                     if node in appear_times:
                         if current_time < appear_times[node]:
-                            appear_time_violations += 1
-                
-                # Update current time
-                if i > 0:
-                    prev_node = route[i-1]
-                    # Use sample_travel_time for stochastic routing
-                    travel_time = sample_travel_time(prev_node, node, self.distance_dicts[instance_idx], current_time)
-                    current_time += travel_time
+                            current_time = appear_times[node]
                 
                 # Check time windows if available
                 if node in time_windows and node not in depots:
@@ -462,11 +537,13 @@ class VRPSolverBase(ABC):
                     # Normalize time
                     current_time = current_time % 1440
                     
+                    # Wait for start time
+                    if current_time < start_time:
+                        current_time = start_time
+                    
                     # Check violation
                     if current_time > end_time:
                         tw_violations += 1
-                    elif current_time < start_time:
-                        current_time = start_time
             
             # Check capacity violation
             if route_demand > vehicle_capacity * 1.001:  # Small tolerance for floating point
@@ -673,3 +750,67 @@ class VRPSolverBase(ABC):
                 continue
         
         return total_distance
+    
+    def calculate_distance(self, loc1, loc2):
+        """Calculate Euclidean distance between two points"""
+        return np.sqrt(np.sum((loc1 - loc2)**2))
+    
+    def calculate_total_cost(self, route: List[int], instance_idx: int) -> float:
+        """Calculate total cost (distance) of a route"""
+        if not route:
+            return 0.0
+            
+        total_dist = 0.0
+        
+        # Get locations for this instance
+        locs = self.locations[instance_idx]
+        depot = self.depot[instance_idx] if len(self.depot.shape) > 1 else self.depot
+        
+        # Distance from depot to first customer
+        current_loc = depot
+        
+        for node_idx in route:
+            # Adjust for 0-based indexing if necessary (assuming route contains 1-based indices for customers)
+            # If route contains 0-based indices into the customer list (excluding depot)
+            # We need to map them correctly. 
+            # Usually in VRP benchmarks: 0 is depot, 1..N are customers.
+            # But here self.locations usually contains ONLY customers if separated from depot.
+            
+            # Let's assume route indices map to self.locations[instance_idx][node_idx]
+            # If node_idx is 0-based index into the customer array
+            next_loc = locs[node_idx]
+            total_dist += self.calculate_distance(current_loc, next_loc)
+            current_loc = next_loc
+            
+        # Return to depot
+        total_dist += self.calculate_distance(current_loc, depot)
+        
+        return total_dist
+        
+    def check_capacity_constraints(self, route: List[int], instance_idx: int) -> Tuple[bool, float, float]:
+        """Check if route satisfies capacity constraints"""
+        if not route:
+            return True, 0.0, 0.0
+            
+        # Get demands for this instance
+        demands = self.demands[instance_idx]
+        
+        # Get capacity
+        # Handle scalar or array capacity
+        if isinstance(self.capacity, (int, float)):
+            capacity = self.capacity
+        elif isinstance(self.capacity, np.ndarray) and self.capacity.size == 1:
+            capacity = float(self.capacity)
+        elif hasattr(self.capacity, '__getitem__'):
+             capacity = self.capacity[instance_idx]
+        else:
+             capacity = 1.0 # Default
+            
+        total_demand = 0.0
+        for node_idx in route:
+            total_demand += demands[node_idx]
+            
+        is_feasible = total_demand <= capacity + 1e-5 # Tolerance for float comparison
+        violation = max(0.0, total_demand - capacity)
+        
+        return is_feasible, total_demand, violation
