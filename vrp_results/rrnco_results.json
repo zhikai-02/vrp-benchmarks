@@ -1,0 +1,32 @@
+{
+  "solver": "RRNCO",
+  "overall": {
+    "total_cost": 0,
+    "waiting_time": 0,
+    "cvr": 0,
+    "feasibility": 0,
+    "runtime": 0,
+    "robustness": 0,
+    "time_window_violations": 0
+  },
+  "cvrp": {
+    "total_cost": 0,
+    "waiting_time": 0,
+    "cvr": 0,
+    "feasibility": 0,
+    "runtime": 0,
+    "robustness": 0,
+    "time_window_violations": 0
+  },
+  "twcvrp": {
+    "total_cost": 0,
+    "waiting_time": 0,
+    "cvr": 0,
+    "feasibility": 0,
+    "runtime": 0,
+    "robustness": 0,
+    "time_window_violations": 0
+  },
+  "by_size": {},
+  "detailed": []
+}

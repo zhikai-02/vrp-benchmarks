@@ -246,8 +246,64 @@ class NN2optSolver(VRPSolverBase):
         # Ensure we have enough capacity information
         if len(capacities) == 0:
             capacities = np.array([100] * num_vehicles)
-        elif len(capacities) < num_vehicles:
-            capacities = np.concatenate([capacities, [capacities[0]] * (num_vehicles - len(capacities))])
+        else:
+            # DEBUG
+            # print(f"DEBUG: capacities type: {type(capacities)}, shape: {getattr(capacities, 'shape', 'no shape')}, dtype: {getattr(capacities, 'dtype', 'no dtype')}")
+            # if len(capacities) > 0:
+            #    print(f"DEBUG: capacities[0]: {capacities[0]}, type: {type(capacities[0])}")
+
+            # Ensure capacities is 1D array of scalars
+            # First, try to convert to a standard numpy array of floats
+            try:
+                # If it's a list of lists/arrays, this might fail or create a 2D array
+                capacities_arr = np.array(capacities)
+                
+                if capacities_arr.dtype == object:
+                    # It's an object array, likely containing lists/arrays
+                    # Extract the first element from each item
+                    new_caps = []
+                    for item in capacities:
+                        if hasattr(item, '__len__') and len(item) > 0:
+                            new_caps.append(float(item[0]))
+                        elif hasattr(item, '__len__') and len(item) == 0:
+                            new_caps.append(100.0) # Fallback
+                        else:
+                            new_caps.append(float(item))
+                    capacities = np.array(new_caps)
+                elif len(capacities_arr.shape) > 1:
+                    # It's a multi-dimensional array (e.g. 2D)
+                    # Flatten it or take the first column
+                    capacities = capacities_arr.flatten()
+                else:
+                    # It's already a 1D array (maybe)
+                    capacities = capacities_arr
+            except:
+                # Fallback manual extraction
+                new_caps = []
+                for item in capacities:
+                    try:
+                        if hasattr(item, '__len__') and len(item) > 0:
+                            new_caps.append(float(item[0]))
+                        else:
+                            new_caps.append(float(item))
+                    except:
+                        new_caps.append(100.0)
+                capacities = np.array(new_caps)
+
+            # Final check to ensure it's 1D array of floats
+            if len(capacities.shape) > 1:
+                capacities = capacities.flatten()
+            
+            capacities = capacities.astype(float)
+
+            if len(capacities) < num_vehicles:
+                # Extend with the first capacity value
+                if len(capacities) > 0:
+                    extension_val = capacities[0]
+                    extension = np.full(num_vehicles - len(capacities), extension_val)
+                    capacities = np.concatenate([capacities, extension])
+                else:
+                    capacities = np.array([100.0] * num_vehicles)
         
         # Create routes for each vehicle
         for vehicle in range(num_vehicles):

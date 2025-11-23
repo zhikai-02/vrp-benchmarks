@@ -10,9 +10,8 @@ class VRPEvaluator:
     
     def __init__(self, base_path: str = "../../vrp_benchmark/"):
         self.base_path = base_path
-        # 修改这里：适应新的数据结构
-        # 我们只生成了 CVRP 数据，且文件名格式简单
-        self.problems = ['cvrp/vrp_'] 
+        # Modified to include both CVRP and TWCVRP
+        self.problems = ['cvrp', 'twcvrp'] 
         # 类型变体对于生成的标准数据来说是空的，或者我们可以只保留一个空字符串
         self.types = [['']] 
         self.size_categories = {
@@ -33,7 +32,7 @@ class VRPEvaluator:
         
         instance_count = 0
         
-        for i in range(len(self.problems)):
+        for problem in self.problems:
             for size in sizes:
                 # Adjust parameters based on problem size
                 if size >= 500:
@@ -49,17 +48,14 @@ class VRPEvaluator:
                     actual_instances = max_instances_per_file
                     actual_realizations = num_realizations
                 
-                print(f"Processing size {size}: {actual_instances} instances, {actual_realizations} realizations")
+                print(f"Processing {problem} size {size}: {actual_instances} instances, {actual_realizations} realizations")
                 
-                # 修改这里：不再遍历复杂的 type_variant，直接构建路径
-                # 目标路径: base_path + cvrp/vrp_ + size + _1000 + .npz
-                # 例如: ./data/cvrp/vrp_10_1000.npz
-                
-                data_path = os.path.join(self.base_path, f"cvrp/vrp_{size}{self.dataset_size_suffix}.npz")
+                # Construct path dynamically based on problem type
+                data_path = os.path.join(self.base_path, f"{problem}/vrp_{size}{self.dataset_size_suffix}.npz")
                 
                 # 兼容性检查：如果上面的路径不存在，尝试不带 dataset_size 后缀
                 if not os.path.exists(data_path):
-                     data_path = os.path.join(self.base_path, f"cvrp/vrp_{size}.npz")
+                     data_path = os.path.join(self.base_path, f"{problem}/vrp_{size}.npz")
 
                 if not os.path.exists(data_path):
                     print(f"Warning: Data file not found: {data_path}")
@@ -85,11 +81,11 @@ class VRPEvaluator:
                     
                     # Store results
                     result_entry = {
-                        'problem': 'cvrp',
+                        'problem': problem,
                         'size': size,
                         'type': 'standard',
                         'metrics': avg_results,
-                        'problem_type': 'cvrp'
+                        'problem_type': problem
                     }
                     all_results.append(result_entry)
                     

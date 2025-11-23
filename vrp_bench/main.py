@@ -10,6 +10,7 @@ from nn_2opt_solver import NN2optSolver
 from tabu_search_solver import TabuSearchSolver
 from aco_solver import ACOSolver
 from or_tools_solver import ORToolsSolver, OR_TOOLS_AVAILABLE
+from rrnco_solver import RRNCOSolver
 from vrp_evaluation import VRPEvaluator
 
 
@@ -31,13 +32,17 @@ def main():
     # Set random seeds for reproducibility
     np.random.seed(42)
     random.seed(42)
+    import torch
+    torch.manual_seed(42)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(42)
     
     # Test configuration (optimized for OR-Tools)
     config = {
         'base_path': "./data/",  # Modified to point to local data directory
-        'test_sizes': [10, 20, 50, 100, 200, 500, 1000],  # Reduced set for OR-Tools
+        'test_sizes': [10, 20, 50, 100, 200, 500, 1000],  # Full set for testing RRNCO
         'max_instances_per_file': 3,
-        'num_realizations': 3
+        'num_realizations': 1
     }
     
     # Initialize evaluator
@@ -46,13 +51,14 @@ def main():
     # Dictionary to store all results
     results = {}
     
-    print("DEBUG: Running modified main.py with only ACO")
+    print("DEBUG: Running modified main.py with RRNCO Solver")
     # Define all solvers
     solvers = [
         # (NN2optSolver, "NN+2opt"),
         # (TabuSearchSolver, "Tabu Search"),
-        (ACOSolver, "ACO"),
-        # (ORToolsSolver, solver_name)
+        # (ACOSolver, "ACO"),
+        # (ORToolsSolver, solver_name),
+        (RRNCOSolver, "RRNCO")
     ]
     
     # Test each solver

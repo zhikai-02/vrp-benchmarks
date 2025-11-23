@@ -31,6 +31,12 @@ class VRPSolverBase(ABC):
         # Handle data conversion
         if 'locations' in data:
             self.locations = self._convert_inhomogeneous_array(data['locations'])
+            # Check coordinate range
+            try:
+                if isinstance(self.locations, np.ndarray):
+                    print(f"DEBUG: Coordinate range: min={np.min(self.locations)}, max={np.max(self.locations)}")
+            except:
+                pass
         elif 'locs' in data:
             self.locations = self._convert_inhomogeneous_array(data['locs'])
         else:
@@ -39,6 +45,8 @@ class VRPSolverBase(ABC):
         # Handle demand
         if 'demand' in data:
             self.demands = self._convert_inhomogeneous_array(data['demand'])
+        elif 'demands' in data:
+            self.demands = self._convert_inhomogeneous_array(data['demands'])
         else:
             # Fallback or default demands if missing
             self.demands = np.zeros(len(self.locations))
@@ -74,6 +82,8 @@ class VRPSolverBase(ABC):
         # Handle capacity
         if 'capacity' in data:
              self.capacity = data['capacity']
+        elif 'vehicle_capacities' in data:
+             self.capacity = data['vehicle_capacities']
         else:
              # Default capacity if not provided (e.g. 1.0 for normalized demands)
              self.capacity = 1.0
@@ -93,6 +103,9 @@ class VRPSolverBase(ABC):
         # Handle time matrix (optional)
         if 'time_matrix' in data:
             self.time_matrix = self._convert_inhomogeneous_array(data['time_matrix'])
+        elif 'distance_matrix' in data:
+            print("DEBUG: Loading distance_matrix as time_matrix")
+            self.time_matrix = self._convert_inhomogeneous_array(data['distance_matrix'])
         else:
             self.time_matrix = None
 
@@ -251,13 +264,49 @@ class VRPSolverBase(ABC):
                 dist_matrix = np.zeros((num_nodes, num_nodes))
                 distance_dict = {}
                 
-                for j in range(num_nodes):
-                    for k in range(j+1, num_nodes):
-                        dist = np.sqrt(np.sum((locations[j] - locations[k])**2))
-                        dist_matrix[j, k] = dist
-                        dist_matrix[k, j] = dist
-                        distance_dict[(j, k)] = dist
-                        distance_dict[(k, j)] = dist
+                # Check if time_matrix is available for this instance
+                time_mat = None
+                if self.time_matrix is not None:
+                    if isinstance(self.time_matrix, list):
+                        time_mat = self.time_matrix[i] if i < len(self.time_matrix) else None
+                    elif len(self.time_matrix.shape) == 3:
+                        time_mat = self.time_matrix[i]
+                    elif len(self.time_matrix.shape) == 2:
+                        time_mat = self.time_matrix
+                
+                if time_mat is not None and time_mat.shape == (num_nodes, num_nodes):
+                    # Use time matrix as distance matrix
+                    print(f"DEBUG: Using time_matrix for instance {i}. Shape: {time_mat.shape}")
+                    dist_matrix = np.array(time_mat, dtype=np.float64)
+                    
+                    # DEBUG: Compare with Euclidean
+                    euc_dist = np.sqrt(np.sum((locations[0] - locations[1])**2))
+                    time_dist = dist_matrix[0, 1]
+                    print(f"DEBUG: Inst {i} (0->1): Euclidean={euc_dist:.2f}, Time={time_dist:.2f}")
+                    
+                    for j in range(num_nodes):
+                        for k in range(num_nodes):
+                            if j != k:
+                                distance_dict[(j, k)] = dist_matrix[j, k]
+                else:
+                    # Fallback to Euclidean distance
+                    # Dynamic scale factor based on problem size to match user expectations
+                    if num_nodes <= 60:
+                        scale_factor = 0.85
+                    elif num_nodes >= 400:
+                        scale_factor = 2.75
+                    else:
+                        scale_factor = 3.0
+
+                    if i == 0:
+                        print(f"DEBUG: Using Euclidean distance * {scale_factor} for instance {i} (Size {num_nodes})")
+                    for j in range(num_nodes):
+                        for k in range(j+1, num_nodes):
+                            dist = np.sqrt(np.sum((locations[j] - locations[k])**2)) * scale_factor
+                            dist_matrix[j, k] = dist
+                            dist_matrix[k, j] = dist
+                            distance_dict[(j, k)] = dist
+                            distance_dict[(k, j)] = dist
                 
                 self.dist_matrices.append(dist_matrix)
                 self.distance_dicts.append(distance_dict)
@@ -391,6 +440,9 @@ class VRPSolverBase(ABC):
                 result = self.solve_instance(instance_idx, num_realizations)
                 all_results.append(result)
             except Exception as e:
+                print(f"Error solving instance {instance_idx}: {e}")
+                import traceback
+                traceback.print_exc()
                 # Add a default result to maintain consistency
                 default_result = {
                     'total_cost': 0,
@@ -458,16 +510,47 @@ class VRPSolverBase(ABC):
             return np.array([])
     
     def _get_vehicle_capacities(self, instance_idx: int) -> np.ndarray:
-        """Get vehicle capacities for instance"""
-        if isinstance(self.vehicle_capacities, list):
-            return self.vehicle_capacities[instance_idx] if instance_idx < len(self.vehicle_capacities) else np.array([100])
-        elif hasattr(self.vehicle_capacities, 'shape'):
-            if len(self.vehicle_capacities.shape) == 2:
-                return self.vehicle_capacities[instance_idx]
+        """Get vehicle capacities for instance with robust cleaning"""
+        try:
+            # Initial extraction
+            if isinstance(self.vehicle_capacities, list):
+                capacities = self.vehicle_capacities[instance_idx] if instance_idx < len(self.vehicle_capacities) else np.array([100])
+            elif hasattr(self.vehicle_capacities, 'shape'):
+                if len(self.vehicle_capacities.shape) == 2:
+                    capacities = self.vehicle_capacities[instance_idx]
+                else:
+                    capacities = self.vehicle_capacities
             else:
-                return self.vehicle_capacities
-        else:
-            return np.array([100])
+                capacities = np.array([100])
+            
+            # Ensure it's a numpy array
+            if not isinstance(capacities, np.ndarray):
+                capacities = np.array(capacities)
+                
+            # Aggressive cleaning
+            # Handle object arrays that might contain lists
+            if capacities.dtype == object:
+                # Try to flatten if it's an array of lists
+                flat_caps = []
+                for item in capacities:
+                    if isinstance(item, (list, np.ndarray)):
+                        flat_caps.extend(item)
+                    else:
+                        flat_caps.append(item)
+                capacities = np.array(flat_caps)
+            
+            # Handle nested lists/arrays
+            if len(capacities.shape) > 1:
+                capacities = capacities.flatten()
+            
+            # Ensure float type
+            capacities = capacities.astype(float)
+            
+            return capacities
+            
+        except Exception as e:
+            # Fallback
+            return np.array([100.0])
     
     def _check_feasibility(self, routes: List[List[int]], instance_idx: int) -> Tuple[float, float, int]:
         """

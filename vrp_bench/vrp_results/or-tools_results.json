@@ -1,104 +1,49 @@
 {
   "solver": "OR-Tools",
   "overall": {
-    "total_cost": 252.0105781824639,
+    "total_cost": 7706.784561200684,
     "waiting_time": 0.0,
-    "cvr": 2.685714285714286,
-    "feasibility": 0.9731428571428571,
-    "runtime": 1.3671556597664243,
-    "robustness": 0.0027615958696704927
+    "cvr": 0.0,
+    "feasibility": 1.0,
+    "runtime": 1.0874259372552235,
+    "robustness": 0.21232323186441704
   },
   "cvrp": {
-    "total_cost": 252.0105781824639,
+    "total_cost": 7902.908230188841,
     "waiting_time": 0.0,
-    "cvr": 2.685714285714286,
-    "feasibility": 0.9731428571428571,
-    "runtime": 1.3671556597664243,
-    "robustness": 0.0027615958696704927
+    "cvr": 0.0,
+    "feasibility": 1.0,
+    "runtime": 1.086921731630961,
+    "robustness": 0.18208482180833763
   },
   "twcvrp": {
-    "total_cost": 0,
-    "waiting_time": 0,
-    "cvr": 0,
-    "feasibility": 0,
-    "runtime": 0,
-    "robustness": 0,
-    "time_window_violations": 0
+    "total_cost": 7510.660892212527,
+    "waiting_time": 0.0,
+    "cvr": 0.0,
+    "feasibility": 1.0,
+    "runtime": 1.087930142879486,
+    "robustness": 0.24256164192049645
   },
   "by_size": {
-    "small": {
-      "feasibility": 0.9433333333333334,
-      "cost": 25.821575929447647,
-      "cvr": 5.666666666666667,
-      "runtime": 0.30533210436503094
-    },
     "medium": {
-      "feasibility": 0.9924999999999999,
-      "cost": 177.5411949046762,
-      "cvr": 0.75,
-      "runtime": 1.0610699852307637
-    },
-    "large": {
-      "feasibility": 0.9984999999999999,
-      "cost": 665.7634648397759,
-      "cvr": 0.15000000000000002,
-      "runtime": 3.265976667404175
+      "feasibility": 1.0,
+      "cost": 7706.784561200684,
+      "cvr": 0.0,
+      "runtime": 1.0874259372552235
     }
   },
   "detailed": [
     {
       "problem": "cvrp",
-      "size": 10,
-      "type": "standard",
-      "metrics": {
-        "total_cost": 8.229590503518699,
-        "waiting_time": 0.0,
-        "cvr": 10.0,
-        "feasibility": 0.9,
-        "runtime": 0.7849730650583903,
-        "robustness": 0.0011400739702514136
-      },
-      "problem_type": "cvrp"
-    },
-    {
-      "problem": "cvrp",
-      "size": 20,
-      "type": "standard",
-      "metrics": {
-        "total_cost": 16.191354182930514,
-        "waiting_time": 0.0,
-        "cvr": 5.0,
-        "feasibility": 0.9499999999999998,
-        "runtime": 0.008800586064656576,
-        "robustness": 0.0018583697190125497
-      },
-      "problem_type": "cvrp"
-    },
-    {
-      "problem": "cvrp",
-      "size": 50,
-      "type": "standard",
-      "metrics": {
-        "total_cost": 53.04378310189372,
-        "waiting_time": 0.0,
-        "cvr": 2.0,
-        "feasibility": 0.98,
-        "runtime": 0.1222226619720459,
-        "robustness": 0.0034754254732499283
-      },
-      "problem_type": "cvrp"
-    },
-    {
-      "problem": "cvrp",
       "size": 100,
       "type": "standard",
       "metrics": {
-        "total_cost": 109.94901320122875,
+        "total_cost": 5971.419600900651,
         "waiting_time": 0.0,
-        "cvr": 1.0,
-        "feasibility": 0.9899999999999999,
-        "runtime": 0.9940418402353922,
-        "robustness": 0.003850427659727231
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 1.0375691254933674,
+        "robustness": 0.24380334171026008
       },
       "problem_type": "cvrp"
     },
@@ -107,42 +52,42 @@
       "size": 200,
       "type": "standard",
       "metrics": {
-        "total_cost": 245.13337660812363,
+        "total_cost": 9834.39685947703,
         "waiting_time": 0.0,
-        "cvr": 0.5,
-        "feasibility": 0.995,
-        "runtime": 1.1280981302261353,
-        "robustness": 0.009006874265452325
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 1.1362743377685547,
+        "robustness": 0.12036630190641517
       },
       "problem_type": "cvrp"
     },
     {
-      "problem": "cvrp",
-      "size": 500,
+      "problem": "twcvrp",
+      "size": 100,
       "type": "standard",
       "metrics": {
-        "total_cost": 535.1519700961142,
+        "total_cost": 6075.814583463401,
         "waiting_time": 0.0,
-        "cvr": 0.2,
-        "feasibility": 0.998,
-        "runtime": 2.0492489337921143,
-        "robustness": 0.0
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 1.0350749492645264,
+        "robustness": 0.28295778844726427
       },
-      "problem_type": "cvrp"
+      "problem_type": "twcvrp"
     },
     {
-      "problem": "cvrp",
-      "size": 1000,
+      "problem": "twcvrp",
+      "size": 200,
       "type": "standard",
       "metrics": {
-        "total_cost": 796.3749595834378,
+        "total_cost": 8945.507200961654,
         "waiting_time": 0.0,
-        "cvr": 0.1,
-        "feasibility": 0.999,
-        "runtime": 4.482704401016235,
-        "robustness": 0.0
+        "cvr": 0.0,
+        "feasibility": 1.0,
+        "runtime": 1.1407853364944458,
+        "robustness": 0.20216549539372863
       },
-      "problem_type": "cvrp"
+      "problem_type": "twcvrp"
     }
   ]
 }
